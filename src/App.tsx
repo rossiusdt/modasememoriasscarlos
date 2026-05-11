@@ -5,6 +5,7 @@ import EventHero from './components/EventHero';
 import TicketSelector from './components/TicketSelector';
 import EventDescription from './components/EventDescription';
 import EventLocation from './components/EventLocation';
+import Footer from './components/Footer';
 import AdminDashboard from './pages/AdminDashboard';
 import { track } from './lib/analytics';
 
@@ -33,6 +34,7 @@ function EventPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
