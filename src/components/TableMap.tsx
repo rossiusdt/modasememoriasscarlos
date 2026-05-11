@@ -1,6 +1,7 @@
-import { MapPin, Star } from 'lucide-react';
+import { MapPin, Star, X } from 'lucide-react';
 
 export const PREMIUM_TABLES = [1, 2, 3, 4, 5]; // Fileira A — mais próxima do palco
+export const SOLD_TABLES = [2, 4, 8, 12, 14, 19, 23]; // Mesas já vendidas
 export const PREMIUM_PRICE = 679.00;
 export const STANDARD_PRICE = 497.79;
 
@@ -9,8 +10,6 @@ interface TableMapProps {
   onSelect: (table: number) => void;
 }
 
-// Layout: 5 colunas x 5 linhas = 25 mesas
-// Fileiras mais próximas do palco ficam na parte de baixo do grid (row index 4)
 const COLS = 5;
 const ROWS = 5;
 
@@ -18,7 +17,6 @@ function tableNumber(row: number, col: number) {
   return row * COLS + col + 1;
 }
 
-// Distância do palco: row 4 = mais próximo, row 0 = mais distante
 function rowLabel(row: number) {
   const labels = ['E', 'D', 'C', 'B', 'A'];
   return labels[row];
@@ -41,7 +39,7 @@ export default function TableMap({ selectedTable, onSelect }: TableMapProps) {
           </div>
         </div>
 
-        {/* Subtle arrow indicating direction */}
+        {/* Arrow */}
         <div className="flex justify-center mb-3">
           <div className="flex flex-col items-center gap-0.5">
             <div className="w-px h-3 bg-gray-300" />
@@ -49,13 +47,30 @@ export default function TableMap({ selectedTable, onSelect }: TableMapProps) {
           </div>
         </div>
 
-        {/* Table grid — row 0 closest to stage */}
+        {/* Table grid */}
         <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
           {Array.from({ length: ROWS }, (_, row) =>
             Array.from({ length: COLS }, (_, col) => {
               const num = tableNumber(row, col);
               const isSelected = selectedTable === num;
               const isPremium = PREMIUM_TABLES.includes(num);
+              const isSold = SOLD_TABLES.includes(num);
+
+              if (isSold) {
+                return (
+                  <div
+                    key={num}
+                    title={`Mesa ${num} — Esgotada`}
+                    className="relative aspect-square rounded-lg border-2 border-red-300 bg-red-100 flex flex-col items-center justify-center cursor-not-allowed"
+                  >
+                    <X className="w-3.5 h-3.5 text-red-400 absolute top-1 right-1" />
+                    <span className="text-xs font-bold text-red-400 leading-none">{num}</span>
+                    <span className="text-[9px] mt-0.5 font-normal text-red-300">
+                      {rowLabel(row)}
+                    </span>
+                  </div>
+                );
+              }
 
               const idleClass = isPremium
                 ? 'bg-amber-300 border-amber-400 hover:bg-amber-400 text-amber-900'
@@ -67,7 +82,7 @@ export default function TableMap({ selectedTable, onSelect }: TableMapProps) {
                 <button
                   key={num}
                   onClick={() => onSelect(num)}
-                  title={`Mesa ${num} — Fileira ${rowLabel(row)}${isPremium ? ' — R$ 679,00' : ' — R$ 497,79'}`}
+                  title={`Mesa ${num} — Fileira ${rowLabel(row)} — ${isPremium ? 'R$ 679,00' : 'R$ 497,79'}`}
                   className={`
                     relative aspect-square rounded-lg border-2 flex flex-col items-center justify-center
                     transition-all duration-150 text-xs font-bold shadow-sm
@@ -92,7 +107,7 @@ export default function TableMap({ selectedTable, onSelect }: TableMapProps) {
 
         {/* Legend */}
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-amber-100">
-          <div className="flex items-center gap-3 text-[10px] text-gray-500">
+          <div className="flex items-center gap-2 flex-wrap text-[10px] text-gray-500">
             <span className="flex items-center gap-1">
               <span className="w-3 h-3 rounded bg-amber-300 border border-amber-400 inline-block" />
               Premium — R$ 679,00
@@ -101,9 +116,13 @@ export default function TableMap({ selectedTable, onSelect }: TableMapProps) {
               <span className="w-3 h-3 rounded bg-white border border-gray-200 inline-block" />
               Padrão — R$ 497,79
             </span>
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded bg-red-100 border border-red-300 inline-block" />
+              Esgotada
+            </span>
           </div>
           {selectedTable && (
-            <span className="text-xs font-semibold text-[#5c3d20] bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-semibold text-[#5c3d20] bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
               Mesa {selectedTable}
             </span>
           )}

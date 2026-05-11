@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Plus, Minus } from 'lucide-react';
 import CheckoutModal from './CheckoutModal';
-import TableMap, { PREMIUM_TABLES, PREMIUM_PRICE, STANDARD_PRICE } from './TableMap';
+import TableMap, { PREMIUM_TABLES, SOLD_TABLES, PREMIUM_PRICE, STANDARD_PRICE } from './TableMap';
 import { track } from '../lib/analytics';
 
 interface TicketOption {
@@ -17,8 +17,8 @@ const ticketOptions: TicketOption[] = [
     id: 'mesa',
     name: 'MESA (4 A 6 PESSOAS)',
     price: STANDARD_PRICE,
-    label: 'a partir de R$ 497,79',
-    note: 'Mesa para 4 a 6 pessoas. Open Bar incluso. Mesas próximas ao palco por R$ 679,00.',
+    label: '',
+    note: 'Mesa para 4 a 6 pessoas. Open Bar incluso.',
   },
   {
     id: 'open-bar-individual',
@@ -98,7 +98,22 @@ export default function TicketSelector() {
               <div className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
                 <div className="mb-3">
                   <h3 className="font-bold text-gray-900 text-sm mb-1">{ticket.name}</h3>
-                  <p className="text-lg font-bold text-gray-900">{ticket.label}</p>
+                  {ticket.id === 'mesa' ? (
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-lg font-bold text-gray-900 transition-all duration-300">
+                        {selectedTable
+                          ? `R$ ${(PREMIUM_TABLES.includes(selectedTable) ? PREMIUM_PRICE : STANDARD_PRICE).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                          : 'a partir de R$ 497,79'}
+                      </p>
+                      {selectedTable && PREMIUM_TABLES.includes(selectedTable) && !SOLD_TABLES.includes(selectedTable) && (
+                        <span className="text-xs font-semibold text-amber-700 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded-full">
+                          Premium
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-lg font-bold text-gray-900">{ticket.label}</p>
+                  )}
                   {ticket.note && (
                     <p className="text-xs text-gray-500 mt-1">{ticket.note}</p>
                   )}
