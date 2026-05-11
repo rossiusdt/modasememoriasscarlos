@@ -102,7 +102,7 @@ export default function TicketSelector() {
 
   const mesaDisplayPrice = selectedTable
     ? `R$ ${getTierPrice(getTableTier(selectedTable)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-    : 'a partir de R$ 197,90';
+    : 'a partir de R$ 297,90';
 
   return (
     <>
