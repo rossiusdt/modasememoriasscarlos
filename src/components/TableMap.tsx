@@ -11,10 +11,10 @@ export const PRATA_TABLES    = [11, 12, 13, 14, 15]; // row 2
 // row 3-4 = bronze
 export const BRONZE_TABLES   = [16, 17, 18, 19, 20, 21, 22, 23, 24, 25];
 
-export const DIAMANTE_PRICE = 597.90;
-export const OURO_PRICE     = 397.90;
-export const PRATA_PRICE    = 297.90;
-export const BRONZE_PRICE   = 197.90;
+export const DIAMANTE_PRICE = 797.90;
+export const OURO_PRICE     = 497.90;
+export const PRATA_PRICE    = 397.90;
+export const BRONZE_PRICE   = 297.90;
 
 // kept for TicketSelector default display
 export const STANDARD_PRICE = BRONZE_PRICE;
