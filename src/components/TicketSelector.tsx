@@ -17,11 +17,11 @@ interface TicketOption {
 const ticketOptions: TicketOption[] = [
   {
     id: 'mesa',
-    name: 'MESA (4 A 6 PESSOAS)',
+    name: 'MESA (4 A 8 PESSOAS)',
     price: BRONZE_PRICE,
     originalPrice: 497.79,
     label: '',
-    note: 'Mesa para 4 a 6 pessoas. Open Bar incluso.',
+    note: 'Mesa para 4 a 8 pessoas. Open Bar incluso.',
   },
   {
     id: 'area-premium',
