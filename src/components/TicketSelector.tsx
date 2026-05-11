@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Plus, Minus, BadgeCheck } from 'lucide-react';
 import CheckoutModal from './CheckoutModal';
-import TableMap, { PREMIUM_TABLES, SOLD_TABLES, PREMIUM_PRICE, STANDARD_PRICE, PREMIUM_PRICE_ORIGINAL, STANDARD_PRICE_ORIGINAL } from './TableMap';
+import TableMap, { SOLD_TABLES, getTableTier, getTierPrice, BRONZE_PRICE } from './TableMap';
+import type { TableTier } from './TableMap';
 import { track } from '../lib/analytics';
 
 interface TicketOption {
   id: string;
   name: string;
   price: number;
+  originalPrice: number;
   label: string;
   note?: string;
 }
@@ -16,17 +18,26 @@ const ticketOptions: TicketOption[] = [
   {
     id: 'mesa',
     name: 'MESA (4 A 6 PESSOAS)',
-    price: STANDARD_PRICE,
+    price: BRONZE_PRICE,
+    originalPrice: 497.79,
     label: '',
     note: 'Mesa para 4 a 6 pessoas. Open Bar incluso.',
   },
   {
-    id: 'open-bar-individual',
-    name: 'OPEN BAR INDIVIDUAL',
+    id: 'area-premium',
+    name: 'AREA PREMIUM',
     price: 68.90,
+    originalPrice: 137.79,
     label: 'R$ 68,90',
   },
 ];
+
+const TIER_BADGE: Record<TableTier, { label: string; className: string }> = {
+  diamante: { label: 'Diamante', className: 'text-sky-800 bg-sky-100 border-sky-300' },
+  ouro:     { label: 'Ouro',     className: 'text-amber-800 bg-amber-100 border-amber-300' },
+  prata:    { label: 'Prata',    className: 'text-slate-700 bg-slate-100 border-slate-300' },
+  bronze:   { label: 'Bronze',   className: 'text-orange-800 bg-orange-100 border-orange-300' },
+};
 
 const initialQuantities = Object.fromEntries(ticketOptions.map(t => [t.id, 0]));
 
@@ -45,7 +56,6 @@ export default function TicketSelector() {
         track('ticket_add', { ticket_id: id, ticket_name: ticket?.name, price: ticket?.price });
       } else if (delta < 0 && next < prev[id]) {
         track('ticket_remove', { ticket_id: id, ticket_name: ticket?.name });
-        // reset table if removing all mesas
         if (id === 'mesa' && next === 0) setSelectedTable(null);
       }
       return { ...prev, [id]: next };
@@ -55,18 +65,19 @@ export default function TicketSelector() {
   const totalTickets = Object.values(quantities).reduce((sum, qty) => sum + qty, 0);
   const canCheckout = totalTickets > 0 && (!hasMesa || selectedTable !== null);
 
+  const currentTier = selectedTable ? getTableTier(selectedTable) : null;
+  const mesaUnitPrice = selectedTable
+    ? Math.round(getTierPrice(getTableTier(selectedTable)) * 100)
+    : Math.round(BRONZE_PRICE * 100);
+
   const selectedSummary = [
     ...ticketOptions
       .filter(t => quantities[t.id] > 0)
-      .map(t => `${quantities[t.id]}x ${t.name} (${t.label})`),
+      .map(t => `${quantities[t.id]}x ${t.name}${t.id === 'mesa' && currentTier ? ` (${TIER_BADGE[currentTier].label})` : ''}`),
     hasMesa && selectedTable ? `Mesa ${selectedTable}` : null,
   ]
     .filter(Boolean)
     .join(' + ');
-
-  const mesaUnitPrice = selectedTable && PREMIUM_TABLES.includes(selectedTable)
-    ? Math.round(PREMIUM_PRICE * 100)
-    : Math.round(STANDARD_PRICE * 100);
 
   const totalAmount = ticketOptions.reduce((sum, t) => {
     const unitPrice = t.id === 'mesa' ? mesaUnitPrice : Math.round(t.price * 100);
@@ -76,7 +87,9 @@ export default function TicketSelector() {
   const pixItems = ticketOptions
     .filter(t => quantities[t.id] > 0)
     .map(t => ({
-      title: t.id === 'mesa' && selectedTable ? `${t.name} — Mesa ${selectedTable}` : t.name,
+      title: t.id === 'mesa' && selectedTable
+        ? `${t.name} — Mesa ${selectedTable}${currentTier ? ` (${TIER_BADGE[currentTier].label})` : ''}`
+        : t.name,
       unitPrice: t.id === 'mesa' ? mesaUnitPrice : Math.round(t.price * 100),
       quantity: quantities[t.id],
     }));
@@ -86,6 +99,10 @@ export default function TicketSelector() {
     if (hasMesa && !selectedTable) return 'Escolha sua mesa';
     return 'Finalizar Compra';
   };
+
+  const mesaDisplayPrice = selectedTable
+    ? `R$ ${getTierPrice(getTableTier(selectedTable)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+    : 'a partir de R$ 197,90';
 
   return (
     <>
@@ -98,33 +115,32 @@ export default function TicketSelector() {
               <div className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
                 <div className="mb-3">
                   <h3 className="font-bold text-gray-900 text-sm mb-1">{ticket.name}</h3>
+
                   {ticket.id === 'mesa' ? (
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex items-baseline gap-1.5">
                         <p className="text-xs text-gray-400 line-through font-medium">
-                          {selectedTable
-                            ? `R$ ${(PREMIUM_TABLES.includes(selectedTable) ? PREMIUM_PRICE_ORIGINAL : STANDARD_PRICE_ORIGINAL).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                            : 'a partir de R$ 497,79'}
+                          {selectedTable ? 'preço anterior' : 'a partir de R$ 497,79'}
                         </p>
                         <p className="text-lg font-bold text-gray-900 transition-all duration-300">
-                          {selectedTable
-                            ? `R$ ${(PREMIUM_TABLES.includes(selectedTable) ? PREMIUM_PRICE : STANDARD_PRICE).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                            : 'a partir de R$ 248,90'}
+                          {mesaDisplayPrice}
                         </p>
                       </div>
                       <span className="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full shadow-sm">
                         50% OFF
                       </span>
-                      {selectedTable && PREMIUM_TABLES.includes(selectedTable) && !SOLD_TABLES.includes(selectedTable) && (
-                        <span className="text-xs font-semibold text-amber-700 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded-full">
-                          Premium
+                      {currentTier && !SOLD_TABLES.includes(selectedTable!) && (
+                        <span className={`text-xs font-semibold border px-1.5 py-0.5 rounded-full ${TIER_BADGE[currentTier].className}`}>
+                          {TIER_BADGE[currentTier].label}
                         </span>
                       )}
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex items-baseline gap-1.5">
-                        <p className="text-xs text-gray-400 line-through font-medium">R$ 137,79</p>
+                        <p className="text-xs text-gray-400 line-through font-medium">
+                          R$ {ticket.originalPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </p>
                         <p className="text-lg font-bold text-gray-900">{ticket.label}</p>
                       </div>
                       <span className="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full shadow-sm">
@@ -132,6 +148,7 @@ export default function TicketSelector() {
                       </span>
                     </div>
                   )}
+
                   {ticket.note && (
                     <p className="text-xs text-gray-500 mt-1">{ticket.note}</p>
                   )}

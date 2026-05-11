@@ -1,11 +1,48 @@
-import { MapPin, Star, X } from 'lucide-react';
+import { MapPin, X } from 'lucide-react';
 
-export const PREMIUM_TABLES = [1, 2, 3, 4, 5]; // Fileira A — mais próxima do palco
-export const SOLD_TABLES = [2, 4, 8, 12, 14, 19, 23]; // Mesas já vendidas
-export const PREMIUM_PRICE_ORIGINAL = 679.00;
+// Row 0 = fileira A (frente, mais próxima do palco)
+// Row 4 = fileira E (fundo)
+
+export const SOLD_TABLES = [2, 4, 8, 12, 14, 19, 23];
+
+export const DIAMANTE_TABLES = [1, 2, 3, 4, 5];   // row 0
+export const OURO_TABLES     = [6, 7, 8, 9, 10];  // row 1
+export const PRATA_TABLES    = [11, 12, 13, 14, 15]; // row 2
+// row 3-4 = bronze
+export const BRONZE_TABLES   = [16, 17, 18, 19, 20, 21, 22, 23, 24, 25];
+
+export const DIAMANTE_PRICE = 597.90;
+export const OURO_PRICE     = 397.90;
+export const PRATA_PRICE    = 297.90;
+export const BRONZE_PRICE   = 197.90;
+
+// kept for TicketSelector default display
+export const STANDARD_PRICE = BRONZE_PRICE;
+export const PREMIUM_PRICE  = DIAMANTE_PRICE;
+// kept for legacy strikethrough display
+export const PREMIUM_PRICE_ORIGINAL  = 679.00;
 export const STANDARD_PRICE_ORIGINAL = 497.79;
-export const PREMIUM_PRICE = 339.50;
-export const STANDARD_PRICE = 248.90;
+
+// legacy alias used by TicketSelector
+export const PREMIUM_TABLES = DIAMANTE_TABLES;
+
+export type TableTier = 'diamante' | 'ouro' | 'prata' | 'bronze';
+
+export function getTableTier(tableNum: number): TableTier {
+  if (DIAMANTE_TABLES.includes(tableNum)) return 'diamante';
+  if (OURO_TABLES.includes(tableNum))     return 'ouro';
+  if (PRATA_TABLES.includes(tableNum))    return 'prata';
+  return 'bronze';
+}
+
+export function getTierPrice(tier: TableTier): number {
+  switch (tier) {
+    case 'diamante': return DIAMANTE_PRICE;
+    case 'ouro':     return OURO_PRICE;
+    case 'prata':    return PRATA_PRICE;
+    case 'bronze':   return BRONZE_PRICE;
+  }
+}
 
 interface TableMapProps {
   selectedTable: number | null;
@@ -24,7 +61,43 @@ function rowLabel(row: number) {
   return labels[row];
 }
 
+const TIER_STYLES: Record<TableTier, { idle: string; badge: string; label: string; dot: string }> = {
+  diamante: {
+    idle:  'bg-sky-100 border-sky-400 hover:bg-sky-200 text-sky-900',
+    badge: 'text-sky-800',
+    label: 'Diamante',
+    dot:   'bg-sky-200 border border-sky-400',
+  },
+  ouro: {
+    idle:  'bg-amber-200 border-amber-400 hover:bg-amber-300 text-amber-900',
+    badge: 'text-amber-700',
+    label: 'Ouro',
+    dot:   'bg-amber-200 border border-amber-400',
+  },
+  prata: {
+    idle:  'bg-slate-200 border-slate-400 hover:bg-slate-300 text-slate-800',
+    badge: 'text-slate-600',
+    label: 'Prata',
+    dot:   'bg-slate-200 border border-slate-400',
+  },
+  bronze: {
+    idle:  'bg-orange-100 border-orange-300 hover:bg-orange-200 text-orange-900',
+    badge: 'text-orange-700',
+    label: 'Bronze',
+    dot:   'bg-orange-100 border border-orange-300',
+  },
+};
+
+const TIER_PRICE_LABEL: Record<TableTier, string> = {
+  diamante: `R$ ${DIAMANTE_PRICE.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+  ouro:     `R$ ${OURO_PRICE.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+  prata:    `R$ ${PRATA_PRICE.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+  bronze:   `R$ ${BRONZE_PRICE.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+};
+
 export default function TableMap({ selectedTable, onSelect }: TableMapProps) {
+  const tiers: TableTier[] = ['diamante', 'ouro', 'prata', 'bronze'];
+
   return (
     <div className="mt-4 border border-amber-200 rounded-xl overflow-hidden bg-[#fdf8f0]">
       <div className="px-4 pt-4 pb-2">
@@ -55,8 +128,9 @@ export default function TableMap({ selectedTable, onSelect }: TableMapProps) {
             Array.from({ length: COLS }, (_, col) => {
               const num = tableNumber(row, col);
               const isSelected = selectedTable === num;
-              const isPremium = PREMIUM_TABLES.includes(num);
               const isSold = SOLD_TABLES.includes(num);
+              const tier = getTableTier(num);
+              const styles = TIER_STYLES[tier];
 
               if (isSold) {
                 return (
@@ -67,38 +141,27 @@ export default function TableMap({ selectedTable, onSelect }: TableMapProps) {
                   >
                     <X className="w-3.5 h-3.5 text-red-400 absolute top-1 right-1" />
                     <span className="text-xs font-bold text-red-400 leading-none">{num}</span>
-                    <span className="text-[9px] mt-0.5 font-normal text-red-300">
-                      {rowLabel(row)}
-                    </span>
+                    <span className="text-[9px] mt-0.5 font-normal text-red-300">{rowLabel(row)}</span>
                   </div>
                 );
               }
-
-              const idleClass = isPremium
-                ? 'bg-amber-300 border-amber-400 hover:bg-amber-400 text-amber-900'
-                : row === 1
-                ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100 text-gray-700'
-                : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-700';
 
               return (
                 <button
                   key={num}
                   onClick={() => onSelect(num)}
-                  title={`Mesa ${num} — Fileira ${rowLabel(row)} — ${isPremium ? 'R$ 339,50' : 'R$ 248,90'}`}
+                  title={`Mesa ${num} — ${styles.label} — ${TIER_PRICE_LABEL[tier]}`}
                   className={`
                     relative aspect-square rounded-lg border-2 flex flex-col items-center justify-center
                     transition-all duration-150 text-xs font-bold shadow-sm
                     ${isSelected
                       ? 'bg-[#5c3d20] border-[#3b2a1a] text-[#f5e9d0] scale-105 shadow-md ring-2 ring-[#d4a855] ring-offset-1'
-                      : idleClass
+                      : styles.idle
                     }
                   `}
                 >
-                  {isPremium && !isSelected && (
-                    <Star className="w-2.5 h-2.5 fill-amber-600 text-amber-600 absolute top-1 right-1" />
-                  )}
                   <span className="leading-none">{num}</span>
-                  <span className={`text-[9px] mt-0.5 font-normal ${isSelected ? 'text-[#f5e9d0]/70' : isPremium ? 'text-amber-700' : 'text-gray-400'}`}>
+                  <span className={`text-[9px] mt-0.5 font-normal ${isSelected ? 'text-[#f5e9d0]/70' : styles.badge}`}>
                     {rowLabel(row)}
                   </span>
                 </button>
@@ -108,25 +171,26 @@ export default function TableMap({ selectedTable, onSelect }: TableMapProps) {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-amber-100">
-          <div className="flex items-center gap-2 flex-wrap text-[10px] text-gray-500">
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded bg-amber-300 border border-amber-400 inline-block" />
-              Premium — R$ 339,50
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded bg-white border border-gray-200 inline-block" />
-              Padrão — R$ 248,90
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded bg-red-100 border border-red-300 inline-block" />
-              Esgotada
+        <div className="mt-4 pt-3 border-t border-amber-100">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px] text-gray-600">
+            {tiers.map(tier => (
+              <span key={tier} className="flex items-center gap-1.5">
+                <span className={`w-3 h-3 rounded flex-shrink-0 ${TIER_STYLES[tier].dot}`} />
+                <span className="font-semibold">{TIER_STYLES[tier].label}</span>
+                <span className="text-gray-400">— {TIER_PRICE_LABEL[tier]}</span>
+              </span>
+            ))}
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded flex-shrink-0 bg-red-100 border border-red-300" />
+              <span className="text-gray-400">Esgotada</span>
             </span>
           </div>
           {selectedTable && (
-            <span className="text-xs font-semibold text-[#5c3d20] bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
-              Mesa {selectedTable}
-            </span>
+            <div className="mt-2 flex justify-end">
+              <span className="text-xs font-semibold text-[#5c3d20] bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                Mesa {selectedTable} — {TIER_STYLES[getTableTier(selectedTable)].label}
+              </span>
+            </div>
           )}
         </div>
       </div>
