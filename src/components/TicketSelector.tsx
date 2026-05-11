@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, BadgeCheck } from 'lucide-react';
 import CheckoutModal from './CheckoutModal';
 import TableMap, { PREMIUM_TABLES, SOLD_TABLES, PREMIUM_PRICE, STANDARD_PRICE } from './TableMap';
 import { track } from '../lib/analytics';
@@ -158,6 +158,19 @@ export default function TicketSelector() {
         >
           {checkoutButtonLabel()}
         </button>
+
+        {/* Selo de reembolso */}
+        <div className="mt-4 flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <BadgeCheck className="w-5 h-5 text-white" strokeWidth={2} />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-green-800 leading-tight">Reembolso garantido</p>
+            <p className="text-xs text-green-700 mt-0.5 leading-snug">
+              Em caso de desistência, seu dinheiro será devolvido integralmente.
+            </p>
+          </div>
+        </div>
       </div>
 
       <CheckoutModal
