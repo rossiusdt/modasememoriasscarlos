@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, Minus } from 'lucide-react';
 import CheckoutModal from './CheckoutModal';
+import TableMap from './TableMap';
 import { track } from '../lib/analytics';
 
 interface TicketOption {
@@ -31,7 +32,10 @@ const initialQuantities = Object.fromEntries(ticketOptions.map(t => [t.id, 0]));
 
 export default function TicketSelector() {
   const [quantities, setQuantities] = useState<Record<string, number>>(initialQuantities);
+  const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  const hasMesa = quantities['mesa'] > 0;
 
   const updateQuantity = (id: string, delta: number) => {
     const ticket = ticketOptions.find(t => t.id === id);
@@ -41,16 +45,23 @@ export default function TicketSelector() {
         track('ticket_add', { ticket_id: id, ticket_name: ticket?.name, price: ticket?.price });
       } else if (delta < 0 && next < prev[id]) {
         track('ticket_remove', { ticket_id: id, ticket_name: ticket?.name });
+        // reset table if removing all mesas
+        if (id === 'mesa' && next === 0) setSelectedTable(null);
       }
       return { ...prev, [id]: next };
     });
   };
 
   const totalTickets = Object.values(quantities).reduce((sum, qty) => sum + qty, 0);
+  const canCheckout = totalTickets > 0 && (!hasMesa || selectedTable !== null);
 
-  const selectedSummary = ticketOptions
-    .filter(t => quantities[t.id] > 0)
-    .map(t => `${quantities[t.id]}x ${t.name} (${t.label})`)
+  const selectedSummary = [
+    ...ticketOptions
+      .filter(t => quantities[t.id] > 0)
+      .map(t => `${quantities[t.id]}x ${t.name} (${t.label})`),
+    hasMesa && selectedTable ? `Mesa ${selectedTable}` : null,
+  ]
+    .filter(Boolean)
     .join(' + ');
 
   const totalAmount = ticketOptions.reduce(
@@ -61,10 +72,16 @@ export default function TicketSelector() {
   const pixItems = ticketOptions
     .filter(t => quantities[t.id] > 0)
     .map(t => ({
-      title: t.name,
+      title: t.id === 'mesa' && selectedTable ? `${t.name} — Mesa ${selectedTable}` : t.name,
       unitPrice: Math.round(t.price * 100),
       quantity: quantities[t.id],
     }));
+
+  const checkoutButtonLabel = () => {
+    if (totalTickets === 0) return 'Selecione um Ingresso';
+    if (hasMesa && !selectedTable) return 'Escolha sua mesa';
+    return 'Finalizar Compra';
+  };
 
   return (
     <>
@@ -73,41 +90,54 @@ export default function TicketSelector() {
 
         <div className="space-y-3 mb-6">
           {ticketOptions.map((ticket) => (
-            <div key={ticket.id} className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
-              <div className="mb-3">
-                <h3 className="font-bold text-gray-900 text-sm mb-1">{ticket.name}</h3>
-                <p className="text-lg font-bold text-gray-900">{ticket.label}</p>
-                {ticket.note && (
-                  <p className="text-xs text-gray-500 mt-1">{ticket.note}</p>
-                )}
+            <div key={ticket.id}>
+              <div className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
+                <div className="mb-3">
+                  <h3 className="font-bold text-gray-900 text-sm mb-1">{ticket.name}</h3>
+                  <p className="text-lg font-bold text-gray-900">{ticket.label}</p>
+                  {ticket.note && (
+                    <p className="text-xs text-gray-500 mt-1">{ticket.note}</p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => updateQuantity(ticket.id, -1)}
+                    disabled={quantities[ticket.id] === 0}
+                    className="w-9 h-9 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+                  >
+                    <Minus className="w-4 h-4 text-gray-700" />
+                  </button>
+                  <span className="w-10 text-center font-semibold text-gray-900">{quantities[ticket.id]}</span>
+                  <button
+                    onClick={() => updateQuantity(ticket.id, 1)}
+                    className="w-9 h-9 rounded-md bg-[#5c3d20] hover:bg-[#3b2a1a] text-[#f5e9d0] flex items-center justify-center transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => updateQuantity(ticket.id, -1)}
-                  disabled={quantities[ticket.id] === 0}
-                  className="w-9 h-9 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
-                >
-                  <Minus className="w-4 h-4 text-gray-700" />
-                </button>
-                <span className="w-10 text-center font-semibold text-gray-900">{quantities[ticket.id]}</span>
-                <button
-                  onClick={() => updateQuantity(ticket.id, 1)}
-                  className="w-9 h-9 rounded-md bg-[#5c3d20] hover:bg-[#3b2a1a] text-[#f5e9d0] flex items-center justify-center transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
+              {ticket.id === 'mesa' && hasMesa && (
+                <TableMap
+                  selectedTable={selectedTable}
+                  onSelect={setSelectedTable}
+                />
+              )}
             </div>
           ))}
         </div>
 
         <button
-          onClick={() => { setModalOpen(true); track('checkout_open', { summary: selectedSummary, total: totalAmount }); }}
-          disabled={totalTickets === 0}
+          onClick={() => {
+            if (!canCheckout) return;
+            setModalOpen(true);
+            track('checkout_open', { summary: selectedSummary, total: totalAmount, table: selectedTable });
+          }}
+          disabled={!canCheckout}
           className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-lg transition-colors"
         >
-          {totalTickets > 0 ? 'Finalizar Compra' : 'Selecione um Ingresso'}
+          {checkoutButtonLabel()}
         </button>
       </div>
 
