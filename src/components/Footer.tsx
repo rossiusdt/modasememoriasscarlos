@@ -1,4 +1,4 @@
-import { Shield, Mail, ExternalLink } from 'lucide-react';
+import { Shield, Mail, BadgeCheck } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -64,6 +64,21 @@ export default function Footer() {
             </a>
           </div>
 
+        </div>
+
+        {/* Selo de reembolso */}
+        <div className="mt-8 flex justify-center">
+          <div className="inline-flex items-center gap-4 bg-green-50 border border-green-200 rounded-2xl px-6 py-4 shadow-sm">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center flex-shrink-0 shadow">
+              <BadgeCheck className="w-7 h-7 text-white" strokeWidth={2} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-green-800 leading-tight">Reembolso garantido</p>
+              <p className="text-xs text-green-700 mt-0.5 leading-snug">
+                Em caso de desistência, seu dinheiro<br className="hidden sm:block" /> será devolvido integralmente.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Bottom bar */}
