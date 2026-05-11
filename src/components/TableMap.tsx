@@ -1,4 +1,8 @@
-import { MapPin } from 'lucide-react';
+import { MapPin, Star } from 'lucide-react';
+
+export const PREMIUM_TABLES = [1, 2, 3, 4, 5]; // Fileira A — mais próxima do palco
+export const PREMIUM_PRICE = 679.00;
+export const STANDARD_PRICE = 497.79;
 
 interface TableMapProps {
   selectedTable: number | null;
@@ -51,30 +55,33 @@ export default function TableMap({ selectedTable, onSelect }: TableMapProps) {
             Array.from({ length: COLS }, (_, col) => {
               const num = tableNumber(row, col);
               const isSelected = selectedTable === num;
-              // Closer to stage = warmer color
-              const proximityClass =
-                row === 0
-                  ? 'bg-amber-100 border-amber-300 hover:bg-amber-200'
-                  : row === 1
-                  ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
-                  : 'bg-white border-gray-200 hover:bg-gray-50';
+              const isPremium = PREMIUM_TABLES.includes(num);
+
+              const idleClass = isPremium
+                ? 'bg-amber-300 border-amber-400 hover:bg-amber-400 text-amber-900'
+                : row === 1
+                ? 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100 text-gray-700'
+                : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-700';
 
               return (
                 <button
                   key={num}
                   onClick={() => onSelect(num)}
-                  title={`Mesa ${num} — Fileira ${rowLabel(row)}`}
+                  title={`Mesa ${num} — Fileira ${rowLabel(row)}${isPremium ? ' — R$ 679,00' : ' — R$ 497,79'}`}
                   className={`
                     relative aspect-square rounded-lg border-2 flex flex-col items-center justify-center
                     transition-all duration-150 text-xs font-bold shadow-sm
                     ${isSelected
                       ? 'bg-[#5c3d20] border-[#3b2a1a] text-[#f5e9d0] scale-105 shadow-md ring-2 ring-[#d4a855] ring-offset-1'
-                      : `${proximityClass} text-gray-700`
+                      : idleClass
                     }
                   `}
                 >
+                  {isPremium && !isSelected && (
+                    <Star className="w-2.5 h-2.5 fill-amber-600 text-amber-600 absolute top-1 right-1" />
+                  )}
                   <span className="leading-none">{num}</span>
-                  <span className={`text-[9px] mt-0.5 font-normal ${isSelected ? 'text-[#f5e9d0]/70' : 'text-gray-400'}`}>
+                  <span className={`text-[9px] mt-0.5 font-normal ${isSelected ? 'text-[#f5e9d0]/70' : isPremium ? 'text-amber-700' : 'text-gray-400'}`}>
                     {rowLabel(row)}
                   </span>
                 </button>
@@ -87,12 +94,12 @@ export default function TableMap({ selectedTable, onSelect }: TableMapProps) {
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-amber-100">
           <div className="flex items-center gap-3 text-[10px] text-gray-500">
             <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded bg-amber-100 border border-amber-300 inline-block" />
-              Mais próximo do palco
+              <span className="w-3 h-3 rounded bg-amber-300 border border-amber-400 inline-block" />
+              Premium — R$ 679,00
             </span>
             <span className="flex items-center gap-1">
               <span className="w-3 h-3 rounded bg-white border border-gray-200 inline-block" />
-              Mais distante
+              Padrão — R$ 497,79
             </span>
           </div>
           {selectedTable && (

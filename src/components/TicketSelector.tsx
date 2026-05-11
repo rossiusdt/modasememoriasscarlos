@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Plus, Minus } from 'lucide-react';
 import CheckoutModal from './CheckoutModal';
-import TableMap from './TableMap';
+import TableMap, { PREMIUM_TABLES, PREMIUM_PRICE, STANDARD_PRICE } from './TableMap';
 import { track } from '../lib/analytics';
 
 interface TicketOption {
@@ -16,9 +16,9 @@ const ticketOptions: TicketOption[] = [
   {
     id: 'mesa',
     name: 'MESA (4 A 6 PESSOAS)',
-    price: 497.79,
-    label: 'R$ 497,79',
-    note: 'Mesa para 4 a 6 pessoas. Open Bar incluso.',
+    price: STANDARD_PRICE,
+    label: 'a partir de R$ 497,79',
+    note: 'Mesa para 4 a 6 pessoas. Open Bar incluso. Mesas próximas ao palco por R$ 679,00.',
   },
   {
     id: 'open-bar-individual',
@@ -64,16 +64,20 @@ export default function TicketSelector() {
     .filter(Boolean)
     .join(' + ');
 
-  const totalAmount = ticketOptions.reduce(
-    (sum, t) => sum + Math.round(t.price * 100) * quantities[t.id],
-    0
-  );
+  const mesaUnitPrice = selectedTable && PREMIUM_TABLES.includes(selectedTable)
+    ? Math.round(PREMIUM_PRICE * 100)
+    : Math.round(STANDARD_PRICE * 100);
+
+  const totalAmount = ticketOptions.reduce((sum, t) => {
+    const unitPrice = t.id === 'mesa' ? mesaUnitPrice : Math.round(t.price * 100);
+    return sum + unitPrice * quantities[t.id];
+  }, 0);
 
   const pixItems = ticketOptions
     .filter(t => quantities[t.id] > 0)
     .map(t => ({
       title: t.id === 'mesa' && selectedTable ? `${t.name} — Mesa ${selectedTable}` : t.name,
-      unitPrice: Math.round(t.price * 100),
+      unitPrice: t.id === 'mesa' ? mesaUnitPrice : Math.round(t.price * 100),
       quantity: quantities[t.id],
     }));
 
