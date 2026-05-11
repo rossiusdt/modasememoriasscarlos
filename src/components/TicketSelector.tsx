@@ -26,9 +26,9 @@ const ticketOptions: TicketOption[] = [
   {
     id: 'area-premium',
     name: 'AREA PREMIUM',
-    price: 68.90,
+    price: 97.90,
     originalPrice: 137.79,
-    label: 'R$ 68,90',
+    label: 'R$ 97,90',
   },
 ];
 
