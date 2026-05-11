@@ -2,8 +2,10 @@ import { MapPin, Star, X } from 'lucide-react';
 
 export const PREMIUM_TABLES = [1, 2, 3, 4, 5]; // Fileira A — mais próxima do palco
 export const SOLD_TABLES = [2, 4, 8, 12, 14, 19, 23]; // Mesas já vendidas
-export const PREMIUM_PRICE = 679.00;
-export const STANDARD_PRICE = 497.79;
+export const PREMIUM_PRICE_ORIGINAL = 679.00;
+export const STANDARD_PRICE_ORIGINAL = 497.79;
+export const PREMIUM_PRICE = 339.50;
+export const STANDARD_PRICE = 248.90;
 
 interface TableMapProps {
   selectedTable: number | null;
@@ -82,7 +84,7 @@ export default function TableMap({ selectedTable, onSelect }: TableMapProps) {
                 <button
                   key={num}
                   onClick={() => onSelect(num)}
-                  title={`Mesa ${num} — Fileira ${rowLabel(row)} — ${isPremium ? 'R$ 679,00' : 'R$ 497,79'}`}
+                  title={`Mesa ${num} — Fileira ${rowLabel(row)} — ${isPremium ? 'R$ 339,50' : 'R$ 248,90'}`}
                   className={`
                     relative aspect-square rounded-lg border-2 flex flex-col items-center justify-center
                     transition-all duration-150 text-xs font-bold shadow-sm
@@ -110,11 +112,11 @@ export default function TableMap({ selectedTable, onSelect }: TableMapProps) {
           <div className="flex items-center gap-2 flex-wrap text-[10px] text-gray-500">
             <span className="flex items-center gap-1">
               <span className="w-3 h-3 rounded bg-amber-300 border border-amber-400 inline-block" />
-              Premium — R$ 679,00
+              Premium — R$ 339,50
             </span>
             <span className="flex items-center gap-1">
               <span className="w-3 h-3 rounded bg-white border border-gray-200 inline-block" />
-              Padrão — R$ 497,79
+              Padrão — R$ 248,90
             </span>
             <span className="flex items-center gap-1">
               <span className="w-3 h-3 rounded bg-red-100 border border-red-300 inline-block" />

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Plus, Minus, BadgeCheck } from 'lucide-react';
 import CheckoutModal from './CheckoutModal';
-import TableMap, { PREMIUM_TABLES, SOLD_TABLES, PREMIUM_PRICE, STANDARD_PRICE } from './TableMap';
+import TableMap, { PREMIUM_TABLES, SOLD_TABLES, PREMIUM_PRICE, STANDARD_PRICE, PREMIUM_PRICE_ORIGINAL, STANDARD_PRICE_ORIGINAL } from './TableMap';
 import { track } from '../lib/analytics';
 
 interface TicketOption {
@@ -23,8 +23,8 @@ const ticketOptions: TicketOption[] = [
   {
     id: 'open-bar-individual',
     name: 'OPEN BAR INDIVIDUAL',
-    price: 137.79,
-    label: 'R$ 137,79',
+    price: 68.90,
+    label: 'R$ 68,90',
   },
 ];
 
@@ -99,12 +99,22 @@ export default function TicketSelector() {
                 <div className="mb-3">
                   <h3 className="font-bold text-gray-900 text-sm mb-1">{ticket.name}</h3>
                   {ticket.id === 'mesa' ? (
-                    <div className="flex items-baseline gap-2">
-                      <p className="text-lg font-bold text-gray-900 transition-all duration-300">
-                        {selectedTable
-                          ? `R$ ${(PREMIUM_TABLES.includes(selectedTable) ? PREMIUM_PRICE : STANDARD_PRICE).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                          : 'a partir de R$ 497,79'}
-                      </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-baseline gap-1.5">
+                        <p className="text-xs text-gray-400 line-through font-medium">
+                          {selectedTable
+                            ? `R$ ${(PREMIUM_TABLES.includes(selectedTable) ? PREMIUM_PRICE_ORIGINAL : STANDARD_PRICE_ORIGINAL).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                            : 'a partir de R$ 497,79'}
+                        </p>
+                        <p className="text-lg font-bold text-gray-900 transition-all duration-300">
+                          {selectedTable
+                            ? `R$ ${(PREMIUM_TABLES.includes(selectedTable) ? PREMIUM_PRICE : STANDARD_PRICE).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                            : 'a partir de R$ 248,90'}
+                        </p>
+                      </div>
+                      <span className="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full shadow-sm">
+                        50% OFF
+                      </span>
                       {selectedTable && PREMIUM_TABLES.includes(selectedTable) && !SOLD_TABLES.includes(selectedTable) && (
                         <span className="text-xs font-semibold text-amber-700 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded-full">
                           Premium
@@ -112,7 +122,15 @@ export default function TicketSelector() {
                       )}
                     </div>
                   ) : (
-                    <p className="text-lg font-bold text-gray-900">{ticket.label}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-baseline gap-1.5">
+                        <p className="text-xs text-gray-400 line-through font-medium">R$ 137,79</p>
+                        <p className="text-lg font-bold text-gray-900">{ticket.label}</p>
+                      </div>
+                      <span className="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full shadow-sm">
+                        50% OFF
+                      </span>
+                    </div>
                   )}
                   {ticket.note && (
                     <p className="text-xs text-gray-500 mt-1">{ticket.note}</p>
