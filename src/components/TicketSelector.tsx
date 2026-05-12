@@ -165,7 +165,8 @@ export default function TicketSelector() {
                   <span className="w-10 text-center font-semibold text-gray-900">{quantities[ticket.id]}</span>
                   <button
                     onClick={() => updateQuantity(ticket.id, 1)}
-                    className="w-9 h-9 rounded-md bg-[#5c3d20] hover:bg-[#3b2a1a] text-[#f5e9d0] flex items-center justify-center transition-colors"
+                    disabled={ticket.id === 'mesa' && quantities[ticket.id] >= 1}
+                    className="w-9 h-9 rounded-md bg-[#5c3d20] hover:bg-[#3b2a1a] disabled:opacity-50 disabled:cursor-not-allowed text-[#f5e9d0] flex items-center justify-center transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
